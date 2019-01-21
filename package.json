@@ -1,0 +1,23 @@
+{
+  "name": "be-hero-backend",
+  "version": "1.0.0",
+  "description": "Server side of BeHero application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Senseinvader/be-hero-backend.git"
+  },
+  "author": "Senseinvader",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Senseinvader/be-hero-backend/issues"
+  },
+  "homepage": "https://github.com/Senseinvader/be-hero-backend#readme",
+  "dependencies": {
+    "eslint": "^5.12.1",
+    "express": "^4.16.4"
+  }
+}
