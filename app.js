@@ -2,9 +2,18 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const heroRoutes = require('./api/routes/heroMain');
-const disabledRoutes = require('./api/routes/disabledMain');
+const disabledRoutes = require('./api/routes/neederMain');
+
+mongoose.connect(
+    'mongodb://node-app:' + 
+    process.env.MONGO_ATLAS_PW + 
+    '@node-apps-shard-00-00-wjxgr.mongodb.net:27017,node-apps-shard-00-01-wjxgr.mongodb.net:27017,node-apps-shard-00-02-wjxgr.mongodb.net:27017/test?ssl=true&replicaSet=node-apps-shard-0&authSource=admin&retryWrites=true', 
+    {
+    useMongoClient: true
+});
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: false}));
@@ -21,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/hero-main', heroRoutes);
-app.use('/disabled-main', disabledRoutes);
+app.use('/needer-main', disabledRoutes);
 
 app.use((req, res, next) => {
     const error = new Error('Not found');

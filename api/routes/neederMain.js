@@ -3,13 +3,13 @@ const router = express.Router();
 
 router.get('/', (req, res, next) => {
     res.status(200).json({
-        message: 'Handling GET requests to /disabled-main'
+        message: 'Handling GET requests to /needer-main'
     });
 });
 
 router.get('/:dialogueId', (req, res, next) => {
     res.status(200).json({
-        message: 'Handling GET requests to /disabled-main/dialogueId',
+        message: 'Handling GET requests to /needer-main/dialogueId',
         dialogueId: req.params.dialogueId
     });
 });
