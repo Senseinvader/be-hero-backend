@@ -7,6 +7,13 @@ router.get('/', (req, res, next) => {
     });
 });
 
+router.get('/:dialogueId', (req, res, next) => {
+    res.status(200).json({
+        message: 'Handling GET requests to /disabled-main/dialogueId',
+        dialogueId: req.params.dialogueId
+    });
+});
+
 router.post('/', (req, res, next) => {
     res.status(201).json({
         message: 'Handling POST requests to /disabled-main'
