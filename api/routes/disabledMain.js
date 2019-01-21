@@ -15,8 +15,13 @@ router.get('/:dialogueId', (req, res, next) => {
 });
 
 router.post('/', (req, res, next) => {
+    const helpRequest = {
+        message: req.body.message,
+        location: req.body.location
+    }
     res.status(201).json({
-        message: 'Handling POST requests to /disabled-main'
+        message: 'Help request has created',
+        helpRequest: helpRequest
     });
 });
 
