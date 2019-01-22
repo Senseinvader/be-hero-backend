@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 
-const neederSchema = mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
+const heroSchema = mongoose.Schema({
+    role: String,
     name: String,
     surname: String,
     password: String,
     description: String,
+    level: Number,
     sessionId: mongoose.Schema.Types.ObjectId
 });
 
-module.exports = mongoose.model('Needer', neederSchema);
+module.exports = mongoose.model('User', userSchema);
