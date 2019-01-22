@@ -4,6 +4,30 @@ const ActiveCase = require('../models/activeCase');
 const User = require('../models/user');
 const mongoose = require('mongoose');
 
+router.get('/', (req, res, next) => {
+    ActiveCase.find()
+    .exec()
+    .then(result => {
+        console.log(result);
+        if(result.length > 0) {
+            res.status(200).json({
+                message: 'List of activeCases has fetched',
+                activeCases: result
+            });
+        } else {
+            res.status(200).json({
+                message: 'The list of activeCases is empty'
+            });
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        })
+    })
+});
+
 router.get('/:dialogueId', (req, res, next) => {
     res.status(200).json({
         message: 'Handling GET requests to /needer-main/dialogueId',
