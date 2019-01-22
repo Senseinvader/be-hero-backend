@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const Hero = require('../models/user');
-const Needer = require('../models/needer');
+const User = require('../models/user');
 const mongoose = require('mongoose');
 
 router.post('/', (req, res, next) => {
     if (req.body.userType === 'hero') {
-        const hero = new Hero({
+        const hero = new User({
             name: req.body.name,
             surname: req.body.surname,
             password: req.body.password,
@@ -16,14 +15,16 @@ router.post('/', (req, res, next) => {
         });
         hero
         .save()
-        .then(result => console.log(result))
+        .then(result => {
+            console.log(result);
+            res.status(201).json({
+                message: "Hero has created",
+                hero: hero
+            });
+        })
         .catch(err => console.log(err));
-        res.status(201).json({
-            message: "Hero has created",
-            hero: hero
-        });
     } else {
-        const needer = new Needer({
+        const needer = new User({
             name: req.body.name,
             surname: req.body.surname,
             password: req.body.password,
@@ -32,12 +33,14 @@ router.post('/', (req, res, next) => {
         });
         needer
         .save()
-        .then(result => console.log(result))
+        .then(result => {
+            console.log(result);
+            res.status(201).json({
+                message: "Needer has created",
+                needer: needer
+            });
+        })
         .catch(err => console.log(err));
-        res.status(201).json({
-            message: "Needer has created",
-            needer: needer
-        });
     }
 });
 

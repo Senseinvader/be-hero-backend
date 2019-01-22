@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const heroSchema = mongoose.Schema({
+const userSchema = mongoose.Schema({
     role: String,
     name: String,
     surname: String,

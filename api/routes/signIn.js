@@ -36,7 +36,6 @@ router.get('/', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
-    
     User.find(
         {
             $and: [
@@ -62,6 +61,7 @@ router.post('/', (req, res, next) => {
             error: err
         })
     })
+    });
 });
 
 module.exports = router;
