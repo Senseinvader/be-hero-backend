@@ -8,6 +8,7 @@ router.get('/', (req, res, next) => {
     let sessionId = req.header("Access-Token");
     if(sessionId) {
         User.find({sessionId: sessionId})
+        .select('_id role name surname description level sessionId')
         .exec()
         .then(result => {
             console.log(result);
@@ -46,6 +47,7 @@ router.post('/', (req, res, next) => {
         {sessionId: uuid()},
         {new: true}
     )
+    .select('_id role name surname description level sessionId')
     .exec()
     .then(result => {
         console.log(result);
