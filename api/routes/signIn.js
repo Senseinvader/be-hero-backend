@@ -44,6 +44,7 @@ router.post('/', (req, res, next) => {
             ]
         },
         {sessionId: uuid()},
+        {new: true}
     )
     .exec()
     .then(result => {

@@ -24,8 +24,26 @@ router.get('/', (req, res, next) => {
         console.log(err);
         res.status(500).json({
             error: err
-        })
+        });
+    });
+});
+
+router.patch('/:activeCaseId', (req, res, next) => {
+    ActiveCase.findByIdAndUpdate({_id: req.params.activeCaseId}, {done: true}, {new: true})
+    .exec()
+    .then(result => {
+        console.log(result);
+        res.status(201).json({
+            message: 'The case was marked as as Done',
+            case: result
+        });
     })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        });
+    });
 });
 
 router.get('/:dialogueId', (req, res, next) => {
