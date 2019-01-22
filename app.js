@@ -5,15 +5,15 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const heroRoutes = require('./api/routes/heroMain');
-const disabledRoutes = require('./api/routes/neederMain');
+const neederRoutes = require('./api/routes/neederMain');
+const signinRoutes = require('./api/routes/signIn');
+const signupRoutes = require('./api/routes/signUp');
 
 mongoose.connect(
     'mongodb://node-app:' + 
     process.env.MONGO_ATLAS_PW + 
-    '@node-apps-shard-00-00-wjxgr.mongodb.net:27017,node-apps-shard-00-01-wjxgr.mongodb.net:27017,node-apps-shard-00-02-wjxgr.mongodb.net:27017/test?ssl=true&replicaSet=node-apps-shard-0&authSource=admin&retryWrites=true', 
-    {
-    useMongoClient: true
-});
+    '@node-app-shard-00-00-nwfq3.mongodb.net:27017,node-app-shard-00-01-nwfq3.mongodb.net:27017,node-app-shard-00-02-nwfq3.mongodb.net:27017/test?ssl=true&replicaSet=node-app-shard-0&authSource=admin&retryWrites=true',
+   { useNewUrlParser: true });
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: false}));
@@ -29,8 +29,14 @@ app.use((req, res, next) => {
     next();
 });
 
+// app.use((req, res, next) => {
+//     if(req.header("Access-Token") === )
+// });
+
+app.use('/signin', signinRoutes);
+app.use('/signup', signupRoutes);
 app.use('/hero-main', heroRoutes);
-app.use('/needer-main', disabledRoutes);
+app.use('/needer-main', neederRoutes);
 
 app.use((req, res, next) => {
     const error = new Error('Not found');
