@@ -4,7 +4,7 @@ const activeCaseSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     neederId: mongoose.Schema.Types.ObjectId,
     heroId: mongoose.Schema.Types.ObjectId,
-    description: String,
+    description: { type: String, required: true },
     done: Boolean
 });
 
