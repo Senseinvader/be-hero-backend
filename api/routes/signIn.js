@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const mongoose = require('mongoose');
+const uuid = require('uuid/v1');
 
 router.get('/', (req, res, next) => {
     let sessionId = req.header("Access-Token");
@@ -36,17 +37,17 @@ router.get('/', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
-    User.find(
+    User.findOneAndUpdate(
         {
             $and: [
                 {password: req.body.password}, {login: req.body.login}
             ]
-        })
+        },
+        {sessionId: uuid()},
+    )
     .exec()
     .then(result => {
-        User.update({"_id": result._id, sessionId: mongoose.Types.ObjectId()})
-    .then(updatedResult => {
-        console.log(updatedResult);
+        console.log(result);
         if (result) {
             res.status(200).json(result);
         } else {
@@ -61,7 +62,6 @@ router.post('/', (req, res, next) => {
             error: err
         })
     })
-    });
 });
 
 module.exports = router;

@@ -2,16 +2,19 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const mongoose = require('mongoose');
+const uuid = require('uuid/v1');
 
 router.post('/', (req, res, next) => {
     if (req.body.userType === 'hero') {
         const hero = new User({
+            role: req.body.userType,
             name: req.body.name,
             surname: req.body.surname,
+            login: req.body.login,
             password: req.body.password,
             description: req.body.description,
             level: 1,
-            sessionId: mongoose.Types.ObjectId()
+            sessionId: uuid()
         });
         hero
         .save()
@@ -25,11 +28,13 @@ router.post('/', (req, res, next) => {
         .catch(err => console.log(err));
     } else {
         const needer = new User({
+            role: req.body.userType,
             name: req.body.name,
             surname: req.body.surname,
+            login: req.body.login,
             password: req.body.password,
             description: req.body.description,
-            sessionId: mongoose.Types.ObjectId()
+            sessionId: uuid()
         });
         needer
         .save()
