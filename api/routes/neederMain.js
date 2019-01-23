@@ -4,9 +4,9 @@ const ActiveCase = require('../models/activeCase');
 const User = require('../models/user');
 const mongoose = require('mongoose');
 
-//Method to GET all ActiveCases in the application
+//Method to GET all ActiveCases (not done) in the application
 router.get('/', (req, res, next) => {
-    ActiveCase.find()
+    ActiveCase.find({done: false})
     .exec()
     .then(results => {
         const response = {
