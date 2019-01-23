@@ -43,6 +43,45 @@ router.get('/', (req, res, next) => {
     });
 });
 
+//Method to GET only taken by the hero
+router.get('/:heroId', (req, res, next) => {
+    ActiveCase.find({heroId: req.params.heroId})
+    .exec()
+    .then(results => {
+        const cases = {
+            activeCases: results.map(result => {
+                return {
+                    _id: result._id,
+                    description: result.description,
+                    neederId: result.neederId,
+                    heroId: result.heroId,
+                    done: result.done,
+                    request: {
+                        type: 'GET',
+                        message: 'The link to see all hero cases',
+                        url: 'http://localhost:3000/hero-main/'
+                    }
+                }
+            })
+        }
+        if(results.length > 0) {
+            res.status(200).json({
+                message: 'List of your activeCases has fetched',
+                cases: cases
+            });
+        } else {
+            res.status(200).json({
+                message: 'The list of your activeCases is empty'
+            });
+        }
+    })
+    .catch(err => {
+        res.status(500).json({
+            error: err
+        })
+    });
+})
+
 //Method to GET/caseId particular case info and have access to chat
 router.get('/:activeCaseId', (req, res, next) => {
     ActiveCase.find({_id: req.params.activeCaseId})
