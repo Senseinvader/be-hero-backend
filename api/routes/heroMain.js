@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const ActiveCase = require('../models/activeCase');
 
+//Method to GET all activeCases, that are not taken by other Heroes
 router.get('/', (req, res, next) => {
-    ActiveCase.find()
+    ActiveCase.find({heroId: null})
     .exec()
     .then(results => {
         const response = {
@@ -42,6 +43,7 @@ router.get('/', (req, res, next) => {
     });
 });
 
+//Method to GET/caseId particular case info and have access to chat
 router.get('/:activeCaseId', (req, res, next) => {
     ActiveCase.find({_id: req.params.activeCaseId})
     .exec()
