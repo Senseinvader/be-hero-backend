@@ -112,7 +112,8 @@ router.post('/', (req, res, next) => {
         neederId: req.body.userId,
         heroId: null,
         description: req.body.description,
-        done: false
+        done: false,
+        dialog: {}
     });
     activeCase
     .save()

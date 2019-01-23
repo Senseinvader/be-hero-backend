@@ -5,7 +5,8 @@ const activeCaseSchema = mongoose.Schema({
     neederId: mongoose.Schema.Types.ObjectId,
     heroId: mongoose.Schema.Types.ObjectId,
     description: { type: String, required: true },
-    done: Boolean
+    done: Boolean,
+    dialog: { type: Map, of: string, required: true }
 });
 
 module.exports = mongoose.model('ActiveCase', activeCaseSchema);
