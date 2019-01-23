@@ -3,6 +3,7 @@ const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const heroRoutes = require('./api/routes/heroMain');
 const neederRoutes = require('./api/routes/neederMain');
@@ -15,13 +16,14 @@ mongoose.connect(
     '@node-app-shard-00-00-nwfq3.mongodb.net:27017,node-app-shard-00-01-nwfq3.mongodb.net:27017,node-app-shard-00-02-nwfq3.mongodb.net:27017/test?ssl=true&replicaSet=node-app-shard-0&authSource=admin&retryWrites=true',
    { useNewUrlParser: true });
 
+app.use(cors());
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Header', 'Origin, Authorization, Contant-Type, Accept');
+    res.header('Access-Control-Allow-Header', 'Origin, Authorization, Content-Type, Accept');
     if(req.method === 'OPTIONS') {
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
         res.status(200).json({});

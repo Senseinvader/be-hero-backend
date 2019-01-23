@@ -19,6 +19,7 @@
   "homepage": "https://github.com/Senseinvader/be-hero-backend#readme",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
     "eslint": "^5.12.1",
     "express": "^4.16.4",
     "mongoose": "^5.4.5",
