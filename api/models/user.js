@@ -7,7 +7,7 @@ const userSchema = mongoose.Schema({
     login: { type: String, required: true },
     password: { type: String, required: true },
     description: { type: String, required: true },
-    level: { type: Number, required: true },
+    level: { type: Number, required: false },
     sessionId: { type: String, required: true }
 });
 
