@@ -41,7 +41,8 @@ router.post('/', (req, res, next) => {
     User.findOneAndUpdate(
         {
             $and: [
-                {password: req.body.password}, {login: req.body.login}
+                {password: req.body.password}, 
+                {login: req.body.login}
             ]
         },
         {sessionId: uuid()},

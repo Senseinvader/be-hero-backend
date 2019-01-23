@@ -26,7 +26,7 @@ router.post('/', (req, res, next) => {
             });
         })
         .catch(err => console.log(err));
-    } else {
+    } else if (req.body.userType === 'needer') {
         const needer = new User({
             role: req.body.userType,
             name: req.body.name,
@@ -34,6 +34,7 @@ router.post('/', (req, res, next) => {
             login: req.body.login,
             password: req.body.password,
             description: req.body.description,
+            level: 0,
             sessionId: uuid()
         });
         needer
