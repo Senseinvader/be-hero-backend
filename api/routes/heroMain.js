@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ActiveCase = require('../models/activeCase');
+const checkAuth = require('../middleware/check-auth');
 
 //Method to GET all activeCases, that are not taken by other Heroes
 router.get('/', (req, res, next) => {
@@ -44,7 +45,7 @@ router.get('/', (req, res, next) => {
 });
 
 //Method to GET only taken by the hero
-router.get('/:heroId', (req, res, next) => {
+router.get('/:heroId', checkAuth, (req, res, next) => {
     ActiveCase.find({heroId: req.params.heroId})
     .exec()
     .then(results => {
