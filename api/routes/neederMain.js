@@ -84,7 +84,7 @@ router.patch('/:activeCaseId', (req, res, next) => {
     });
 });
 
-//Method to GET the information about a particular ActiveCase by it's ID
+// Method to GET the information about a particular ActiveCase by it's ID
 router.get('/:activeCaseId', (req, res, next) => {
     ActiveCase.find({_id: req.params.activeCaseId})
     .exec()
