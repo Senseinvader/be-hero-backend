@@ -5,7 +5,12 @@ const userSchema = mongoose.Schema({
     role: { type: String, required: true },
     name: { type: String, required: true },
     surname: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { 
+      type: String, 
+      required: true, 
+      unique: true, 
+      match: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
+    },
     login: { type: String, required: true },
     password: { type: String, required: true },
     description: { type: String, required: true },
