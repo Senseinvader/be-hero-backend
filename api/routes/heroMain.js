@@ -45,8 +45,8 @@ router.get('/', (req, res, next) => {
 });
 
 //Method to GET only taken by the hero
-router.get('/:heroId', checkAuth, (req, res, next) => {
-    ActiveCase.find({heroId: req.params.heroId})
+router.get('/my-cases', checkAuth, (req, res, next) => {
+    ActiveCase.find({heroId: req.userData.userId})
     .exec()
     .then(results => {
         const cases = {
