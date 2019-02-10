@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const checkAuth = require('../middleware/check-auth');
 
 router.post('/', (req, res, next) => {
   User.findOneAndUpdate(
@@ -56,6 +57,38 @@ router.post('/', (req, res, next) => {
       })
   })
 });
+
+
+router.get('/', checkAuth, (req, res, next) => {
+  console.log('jestem tut', req.userData.email)
+  User.findOneAndUpdate(
+    {email: req.userData.email},
+    {sessionId: uuid()},
+    {new: true}
+  )
+  .exec()
+  // .select('_id role name surname description level')
+  .then(user => {
+      if (user.length < 1) {
+          return res.status(401).json({
+              message: 'Auth falied 1'
+          });
+      } else {
+      return res.status(200).json({
+        message: 'Auth successful',
+        user: user,
+        sessionId: user.sessionId
+      });
+    }
+  })
+  .catch(err => {
+      console.log(err);
+      res.status(500).json({
+          error:err
+      })
+  })
+});
+
 
 
 // router.post('/', (req, res, next) => {
