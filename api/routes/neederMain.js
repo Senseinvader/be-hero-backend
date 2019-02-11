@@ -102,6 +102,32 @@ router.get('/my-cases/:caseId', checkAuth, (req, res, next) => {
     });
 });
 
+// PATCH method to add a message from needer in an activeCase dialog
+router.patch('/my-cases/:caseId', checkAuth, (req, res, next) => {
+  let message = {
+    author: req.body.author,
+    contents: req.body.contents,
+    timeStamp: Date.now()
+  };
+  ActiveCase.findOne({_id: req.params.caseId},)
+    .then(activeCase => {
+      activeCase.dialog.push(message);
+      activeCase.save()
+      .then(result => {
+        // res.status(201).json({
+        //   message: 'Message was added',
+        //   dialog: result
+        // });
+        console.log('Message created')
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        error: err.message
+      });
+    });
+});
+
 //Method to POST - create a new ActiveCase
 router.post('/', checkAuth, (req, res, next) => {
     const activeCase = new ActiveCase({

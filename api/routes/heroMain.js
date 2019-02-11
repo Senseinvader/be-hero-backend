@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ActiveCase = require('../models/activeCase');
+// const Message = require('../models/message');
 const checkAuth = require('../middleware/check-auth');
 
 //Method to GET all activeCases, that are not taken by other Heroes
@@ -130,6 +131,41 @@ router.patch('/:caseId', checkAuth, (req, res, next) => {
         res.status(500).json({
             error: err.message
         });
+    });
+});
+
+// PATCH method to add a message from hero in an activeCase dialog
+router.patch('/my-cases/:caseId', checkAuth, (req, res, next) => {
+  let message = {
+    author: req.body.author,
+    contents: req.body.contents,
+    timeStamp: Date.now()
+  };
+  ActiveCase.findOne(
+    {
+      $and: [
+          {_id: req.params.caseId}, { heroId: req.userData.userId }
+      ]
+    })
+    .then(activeCase => {
+      activeCase.dialog.push(message);
+      activeCase.save()
+      .then(result => {
+        res.status(201).json({
+          message: 'Message was added',
+          dialog: result
+        });
+      })
+      .catch(err => {
+        res.status(500).json({
+          error: err.message
+        });
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        error: err.message
+      });
     });
 });
 

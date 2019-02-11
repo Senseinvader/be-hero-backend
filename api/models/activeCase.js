@@ -1,12 +1,19 @@
 const mongoose = require('mongoose');
 
+const Message = mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  author: String,
+  contents: String,
+  timeStamp: Date
+});
+
 const activeCaseSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     neederId: mongoose.Schema.Types.ObjectId,
     heroId: mongoose.Schema.Types.ObjectId,
     description: { type: String, required: true },
     done: Boolean,
-    dialog: { type: Map, of: String, required: true }
+    dialog: [Message]
     // dialog: { type: Dialog, required: true }
 });
 
