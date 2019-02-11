@@ -114,11 +114,10 @@ router.patch('/my-cases/:caseId', checkAuth, (req, res, next) => {
       activeCase.dialog.push(message);
       activeCase.save()
       .then(result => {
-        // res.status(201).json({
-        //   message: 'Message was added',
-        //   dialog: result
-        // });
-        console.log('Message created')
+        res.status(201).json({
+          message: 'Message was added',
+          dialog: result
+        });
       });
     })
     .catch(err => {
