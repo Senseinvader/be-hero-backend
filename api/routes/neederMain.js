@@ -3,6 +3,7 @@ const router = express.Router();
 const ActiveCase = require('../models/activeCase');
 const User = require('../models/user');
 const mongoose = require('mongoose');
+const checkAuth = require('../middleware/check-auth');
 
 //Method to GET all ActiveCases (not done) in the application
 router.get('/', (req, res, next) => {
@@ -17,12 +18,7 @@ router.get('/', (req, res, next) => {
                     description: result.description,
                     done: result.done,
                     neederId: result.neederId,
-                    heroId: result.heroId,
-                    request: {
-                        type: 'GET',
-                        message: 'The link to see details of the case',
-                        url: 'http://localhost:3000/needer-main/' + result._id
-                    }
+                    heroId: result.heroId
                 }
             })
         }
@@ -47,11 +43,12 @@ router.get('/', (req, res, next) => {
 
 
 // Method to PATCH - change the status of an ActiveCase "done" to true - mark case as accomplished
-router.patch('/:activeCaseId', (req, res, next) => {
+// Requires passing heroId in the request body!!!
+router.patch('/my-cases/:caseId', checkAuth, (req, res, next) => {
     ActiveCase.findByIdAndUpdate(
         {
-                _id: req.params.activeCaseId, 
-                neederId: req.body.neederId,
+                _id: req.params.caseId, 
+                neederId: req.userData.userId,
                 heroId: req.body.heroId
         },
         {done: true}, 
@@ -79,14 +76,14 @@ router.patch('/:activeCaseId', (req, res, next) => {
     .catch(err => {
         console.log(err);
         res.status(500).json({
-            error: err
+            error: err.message
         });
     });
 });
 
 // Method to GET the information about a particular ActiveCase by it's ID
-router.get('/:activeCaseId', (req, res, next) => {
-    ActiveCase.find({_id: req.params.activeCaseId})
+router.get('/my-cases/:caseId', checkAuth, (req, res, next) => {
+    ActiveCase.find({_id: req.params.caseId})
     .exec()
     .then(result => {
         if (!result) {
@@ -100,16 +97,16 @@ router.get('/:activeCaseId', (req, res, next) => {
     })
     .catch(err => {
         res.status(500).json({
-            error: err
+            error: err.message
         });
     });
 });
 
 //Method to POST - create a new ActiveCase
-router.post('/', (req, res, next) => {
+router.post('/', checkAuth, (req, res, next) => {
     const activeCase = new ActiveCase({
         _id: new mongoose.Types.ObjectId(),
-        neederId: req.body.userId,
+        neederId: req.userData.userId,
         heroId: null,
         description: req.body.description,
         done: false,
@@ -138,21 +135,7 @@ router.post('/', (req, res, next) => {
     .catch(err => {
         console.log(err)
         res.status(500).json({
-            error: err
-        });
-    });
-});
-
-router.get('/', (req, res, next) => {
-    Needer.find().exec()
-    .then(result => {
-        console.log(result);
-        res.status(200).json(result);
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
+            error: err.message
         });
     });
 });

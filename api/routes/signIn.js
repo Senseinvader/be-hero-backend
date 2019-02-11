@@ -13,7 +13,6 @@ router.post('/', (req, res, next) => {
     {new: true}
   )
   .exec()
-  // .select('_id role name surname description level')
   .then(user => {
       if (user.length < 1) {
           return res.status(401).json({

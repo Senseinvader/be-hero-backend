@@ -16,12 +16,7 @@ router.get('/', (req, res, next) => {
                     description: result.description,
                     done: result.done,
                     neederId: result.neederId,
-                    heroId: result.heroId,
-                    request: {
-                        type: 'GET',
-                        message: 'The link to see details of the case',
-                        url: 'http://localhost:3000/needer-main/' + result._id
-                    }
+                    heroId: result.heroId
                 }
             })
         }
@@ -44,7 +39,7 @@ router.get('/', (req, res, next) => {
     });
 });
 
-//Method to GET only taken by the hero
+// Method to GET activeCases only taken by the hero
 router.get('/my-cases', checkAuth, (req, res, next) => {
     ActiveCase.find({heroId: req.userData.userId})
     .exec()
@@ -59,7 +54,7 @@ router.get('/my-cases', checkAuth, (req, res, next) => {
                     done: result.done,
                     request: {
                         type: 'GET',
-                        message: 'The link to see all hero cases',
+                        message: 'The link to see all available cases',
                         url: 'http://localhost:3000/hero-main/'
                     }
                 }
@@ -78,14 +73,14 @@ router.get('/my-cases', checkAuth, (req, res, next) => {
     })
     .catch(err => {
         res.status(500).json({
-            error: err
+            error: err.message
         })
     });
 })
 
-//Method to GET/caseId particular case info and have access to chat
-router.get('/:activeCaseId', (req, res, next) => {
-    ActiveCase.find({_id: req.params.activeCaseId})
+// Method to GET/caseId particular case info and have access to chat
+router.get('/my-cases/:caseId', checkAuth, (req, res, next) => {
+    ActiveCase.find({_id: req.params.caseId})
     .exec()
     .then(result => {
         if(!result) {
@@ -99,7 +94,7 @@ router.get('/:activeCaseId', (req, res, next) => {
     })
     .catch(err => {
         res.status(500).json({
-            error: err
+            error: err.message
         });
     });
 });
@@ -110,14 +105,14 @@ router.get('/:activeCaseId', (req, res, next) => {
 
 //Method to PATCH - receive the ActiveCase to have it in Hero's tasks
 // TODO: In GET request we need to send the user's ID!!!
-router.patch('/:activeCaseId', (req, res, next) => {
+router.patch('/my-cases/:caseId', checkAuth, (req, res, next) => {
     ActiveCase.findOneAndUpdate(
         {
             $and: [
-                {_id: req.params.activeCaseId}, {done: false}
+                {_id: req.params.caseId}, {done: false}
             ]
         },
-        {heroId: req.body.heroId},
+        {heroId: req.userData.userId},
         {new: true}
     )
     .exec()
@@ -127,13 +122,13 @@ router.patch('/:activeCaseId', (req, res, next) => {
             case: result,
             request: {
                 type: 'GET',
-                url: 'http://localhost:4000/hero-main/' + result._id
+                url: 'http://localhost:4000/hero-main/my-cases/' + result._id
             }
         });
     })
     .catch(err => {
         res.status(500).json({
-            error: err
+            error: err.message
         });
     });
 });
