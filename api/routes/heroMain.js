@@ -105,11 +105,11 @@ router.get('/my-cases/:caseId', checkAuth, (req, res, next) => {
 
 //Method to PATCH - receive the ActiveCase to have it in Hero's tasks
 // TODO: In GET request we need to send the user's ID!!!
-router.patch('/my-cases/:caseId', checkAuth, (req, res, next) => {
+router.patch('/:caseId', checkAuth, (req, res, next) => {
     ActiveCase.findOneAndUpdate(
         {
             $and: [
-                {_id: req.params.caseId}, {done: false}
+                {_id: req.params.caseId}, {done: false}, { heroId: null }
             ]
         },
         {heroId: req.userData.userId},

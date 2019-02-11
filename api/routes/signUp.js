@@ -45,11 +45,12 @@ router.post('/', (req, res, next) => {
             .catch(err => console.log(err));
           } else if (req.body.userType === 'needer') {
             const needer = new User({
+              _id: new mongoose.Types.ObjectId(),
               role: req.body.userType,
               name: req.body.name,
               surname: req.body.surname,
               login: req.body.login,
-              password: req.body.password,
+              password: hash,
               email: req.body.email,
               description: req.body.description,
               level: 0,

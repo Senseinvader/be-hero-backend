@@ -7,6 +7,7 @@ const activeCaseSchema = mongoose.Schema({
     description: { type: String, required: true },
     done: Boolean,
     dialog: { type: Map, of: String, required: true }
+    // dialog: { type: Dialog, required: true }
 });
 
 module.exports = mongoose.model('ActiveCase', activeCaseSchema);
