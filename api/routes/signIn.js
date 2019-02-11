@@ -59,7 +59,6 @@ router.post('/', (req, res, next) => {
 
 
 router.get('/', checkAuth, (req, res, next) => {
-  console.log('jestem tut', req.userData.email)
   User.findOneAndUpdate(
     {email: req.userData.email},
     {sessionId: uuid()},
