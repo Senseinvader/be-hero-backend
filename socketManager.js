@@ -1,18 +1,20 @@
 const io = require('./server').io;
+const ActiveCase = require('./api/models/activeCase');
 
 let connectedUsers = [];
 
 module.exports = function(socket) {
-  socket.on('USER_CONNECTED', (user) => {
-    connectedUsers = addUser(connectedUsers, user);
-    socket.user = user;
-    socket.emit('USER_CONNECTED', connectedUsers);
-    console.log(connectedUsers);
-  });
+    console.log(socket.id, socket)
+    socket.on('action', (action) => {
+        if(action.type === 'server/hello'){
+          console.log('Got hello data!', action.data);
+          socket.emit('action', {type:'message', data:'good day!'});
+        }
+      });
 }
 
 const getCases = () => {
-  ActiveCase.find({heroId: null})
+    ActiveCase.find({heroId: null})
     .exec()
     .then(results => {
         const response = {
