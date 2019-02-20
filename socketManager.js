@@ -10,97 +10,54 @@ module.exports = function(socket) {
       if(action.type === 'server/get-cases'){
         console.log('Got hello data!', action.data);
         socket.emit('action', {type:'AVAILABLE_CASES', data:getCases()});
+        
       } else if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
         connectedUsers.push({login: user.login, role: user.role, level: user.level})
-        socket.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: getCases()})
+        emitFreeCases(socket, connectedUsers);
         if(user.role === 'hero') {
-          socket.to(socket.id).emit('action', {type: 'ACTIVE_ACCESS', activeCases: getHeroActiveCases(user)})
+          emitHeroCases(socket, user)
         } else if (user.role === 'needer') {
-          socket.to(socket.id).emit('action', {type: 'ACTIVE_ACCESS', activeCases: getNeederActiveCases(user)})
+          emitNeederCases(socket, user);
         }
+      } else if (action.type === 'server/message-sent') {
+
       }
     });
 }
 
-const getCases = () => {
+const emitFreeCases = (socket, connectedUsers) => {
     ActiveCase.find({heroId: null})
     .exec()
     .then(results => {
-      createCasesArray(results);
-        // const response = {
-        //     count: results.length,
-        //     activeCases: results.map(result => {
-        //         return {
-        //             _id: result._id,
-        //             description: result.description,
-        //             done: result.done,
-        //             neederId: result.neederId,
-        //             heroId: result.heroId,
-        //             dialog: result.dialog
-        //         }
-        //     })
-        // }
-        // return response;
+      let cases = createCasesArray(results);
+      socket.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: cases})
     })
     .catch(err => {
         console.log(err);
     });
 }
 
-const getHeroActiveCases = ({id}) => {
-  ActiveCase.find({heroId: id})
+const emitHeroCases = (socket, user) => {
+  ActiveCase.find({heroId: user.id})
     .exec()
     .then(results => {
-      createCasesArray(results);
-        // const cases = {
-        //     activeCases: results.map(result => {
-        //         return {
-        //             _id: result._id,
-        //             description: result.description,
-        //             neederId: result.neederId,
-        //             heroId: result.heroId,
-        //             done: result.done,
-        //             dialog: result.dialog
-        //             request: {
-        //                 type: 'GET',
-        //                 message: 'The link to see all available cases',
-        //                 url: 'http://localhost:3000/hero-main/'
-        //             }
-        //         }
-        //     })
-        // }
-        // return cases;
+      let cases = createCasesArray(results);
+      socket.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
     })
     .catch(err => {
         console.log(err)
     });
 }
 
-const getNeederActiveCases = ({id}) => {
-  // TODO fetch needer cases
-  ActiveCase.find({neederId: id})
+const emitNeederCases = (socket, user) => {
+  ActiveCase.find({neederId: user.id})
   .exec()
   .then(results => {
-    createCasesArray(results);
-    // const cases = {
-    //   activeCases: results.map(result => {
-    //     return {
-    //       _id: result.id,
-    //       description: result.description,
-    //       neederId: result.neederId,
-    //       heroId: result.heroId,
-    //       done: result.done,
-    //       dialog: result.dialog
-    //       request: {
-    //           type: 'GET',
-    //           message: 'The link to see all available cases',
-    //           url: 'http://localhost:3000/hero-main/'
-    //       }
-    //     }
-    //   })
-    // }
+    let cases = createCasesArray(results);
+    socket.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+
   })
   .catch(err => {
     console.log(err)
@@ -130,8 +87,7 @@ const postMessage = (sender, reciever, contents, caseId) => {
 }
 
 const createCasesArray = (results) => {
-  const cases = {
-    activeCases: results.map(result => {
+  const cases = results.map(result => {
       return {
         _id: result.id,
         description: result.description,
@@ -141,6 +97,25 @@ const createCasesArray = (results) => {
         dialog: result.dialog
       }
     })
-  }
   return cases;
 }
+
+
+        // const cases = {
+        //     activeCases: results.map(result => {
+        //         return {
+        //             _id: result._id,
+        //             description: result.description,
+        //             neederId: result.neederId,
+        //             heroId: result.heroId,
+        //             done: result.done,
+        //             dialog: result.dialog
+        //             request: {
+        //                 type: 'GET',
+        //                 message: 'The link to see all available cases',
+        //                 url: 'http://localhost:3000/hero-main/'
+        //             }
+        //         }
+        //     })
+        // }
+        // return cases;
