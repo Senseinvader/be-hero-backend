@@ -14,15 +14,33 @@ module.exports = function(socket) {
       } else if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
-        connectedUsers.push({login: user.login, role: user.role, level: user.level})
+        connectedUsers.push({login: user.login, role: user.role, level: user.level, socketId: user.socketId})
         emitFreeCases(socket, connectedUsers);
         if(user.role === 'hero') {
           emitHeroCases(socket, user)
         } else if (user.role === 'needer') {
           emitNeederCases(socket, user);
         }
-      } else if (action.type === 'server/message-sent') {
 
+      } else if (action.type === 'server/message-sent') {
+        let message = action.message;
+        message.timeStamp = new Date(Date.now());
+        if(message.reciever in connectedUsers) {
+          let recieverSocket = connectedUsers[message.reciever].socketId;
+          socket.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
+        }
+        ActiveCase.findOne({_id: message.caseId})
+        .exec()
+        .then(activeCase => {
+          activeCase.dialog.push(message);
+          activeCase.save();
+        })
+        .then(() => {
+          console.log('Reciever is offline, message was added to DB');
+        })
+        .catch(err => {
+          console.log(err);
+        });
       }
     });
 }
