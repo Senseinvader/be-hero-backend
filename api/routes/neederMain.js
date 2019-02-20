@@ -132,10 +132,12 @@ router.post('/', checkAuth, (req, res, next) => {
     const activeCase = new ActiveCase({
         _id: new mongoose.Types.ObjectId(),
         neederId: req.userData.userId,
+        neederLogin: req.userData.login,
         heroId: null,
         description: req.body.description,
         done: false,
-        dialog: {}
+        dialog: {},
+        timeStamp: new Date(Date.now())
     });
     activeCase
     .save()
@@ -144,11 +146,14 @@ router.post('/', checkAuth, (req, res, next) => {
         res.status(201).json({
             message: 'Help request has created',
             activeCase: {
+                id: result._id,
+                neederId: result.neederId,
+                neederLogin: result.neederLogin,
+                heroId: result.heroId,
                 description: result.description,
                 done: result.done,
-                neederId: result.neederId,
-                heroId: result.heroId,
-                id: result._id,
+                timeStamp: result.timeStamp,
+                dialog: result.dialog,
                 request: {
                     type: 'GET',
                     message: 'The link to see the details of the case',
