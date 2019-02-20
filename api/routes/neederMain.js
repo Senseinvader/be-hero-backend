@@ -6,40 +6,40 @@ const mongoose = require('mongoose');
 const checkAuth = require('../middleware/check-auth');
 
 //Method to GET all ActiveCases (not done) in the application
-router.get('/', (req, res, next) => {
-    ActiveCase.find({done: false})
-    .exec()
-    .then(results => {
-        const response = {
-            count: results.length,
-            activeCases: results.map(result => {
-                return {
-                    _id: result._id,
-                    description: result.description,
-                    done: result.done,
-                    neederId: result.neederId,
-                    heroId: result.heroId
-                }
-            })
-        }
-        if(results.length > 0) {
-            res.status(200).json({
-                message: 'List of activeCases has fetched',
-                response: response
-            });
-        } else {
-            res.status(200).json({
-                message: 'The list of activeCases is empty'
-            });
-        }
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
-        });
-    });
-});
+// router.get('/', (req, res, next) => {
+//     ActiveCase.find({done: false})
+//     .exec()
+//     .then(results => {
+//         const response = {
+//             count: results.length,
+//             activeCases: results.map(result => {
+//                 return {
+//                     _id: result._id,
+//                     description: result.description,
+//                     done: result.done,
+//                     neederId: result.neederId,
+//                     heroId: result.heroId
+//                 }
+//             })
+//         }
+//         if(results.length > 0) {
+//             res.status(200).json({
+//                 message: 'List of activeCases has fetched',
+//                 response: response
+//             });
+//         } else {
+//             res.status(200).json({
+//                 message: 'The list of activeCases is empty'
+//             });
+//         }
+//     })
+//     .catch(err => {
+//         console.log(err);
+//         res.status(500).json({
+//             error: err
+//         });
+//     });
+// });
 
 
 // Method to PATCH - change the status of an ActiveCase "done" to true - mark case as accomplished
