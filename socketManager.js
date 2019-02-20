@@ -7,11 +7,7 @@ let chats = [];
 
 module.exports = function(socket) {
   socket.on('action', (action) => {
-      if(action.type === 'server/get-cases'){
-        console.log('Got hello data!', action.data);
-        socket.emit('action', {type:'AVAILABLE_CASES', data:getCases()});
-        
-      } else if (action.type == 'server/user-connected') {
+      if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
         connectedUsers.push({login: user.login, role: user.role, level: user.level, socketId: user.socketId})
