@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const Message = mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
-  author: String,
+  sender: String,
+  reciever: String,
   contents: String,
   timeStamp: Date
 });
