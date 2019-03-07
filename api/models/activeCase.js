@@ -4,6 +4,7 @@ const Message = mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
   sender: String,
   reciever: String,
+  author: String,
   contents: String,
   timeStamp: Date
 });
