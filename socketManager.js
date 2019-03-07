@@ -20,10 +20,11 @@ module.exports = function(socket) {
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
+        console.log('Message from socket: ', message)
         message.timeStamp = new Date(Date.now());
         if(message.reciever in connectedUsers) {
           let recieverSocket = connectedUsers[message.reciever].socketId;
-          socket.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
+          io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
         }
         ActiveCase.findOne({_id: message.caseId})
         .exec()
@@ -58,7 +59,7 @@ const emitHeroCases = (socket, user) => {
     .exec()
     .then(results => {
       let cases = createCasesArray(results);
-      socket.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+      io.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
     })
     .catch(err => {
         console.log(err)
