@@ -17,7 +17,6 @@ const activeCaseSchema = mongoose.Schema({
     done: Boolean,
     dialog: [Message],
     timeStamp: Date
-    // dialog: { type: Dialog, required: true }
 });
 
 module.exports = mongoose.model('ActiveCase', activeCaseSchema);

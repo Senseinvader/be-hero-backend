@@ -37,7 +37,10 @@ module.exports = function(socket) {
         .catch(err => {
           console.log(err);
         });
-      }
+      } 
+      // else if (action.type === 'server/user-disconnected') {
+
+      // }
     });
 }
 
@@ -58,7 +61,7 @@ const emitHeroCases = (socket, user) => {
     .exec()
     .then(results => {
       let cases = createCasesArray(results);
-      socket.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+      socket.emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
     })
     .catch(err => {
         console.log(err)
@@ -113,6 +116,8 @@ const createCasesArray = (results) => {
     })
   return cases;
 }
+
+
 
 
         // const cases = {
