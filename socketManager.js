@@ -37,10 +37,13 @@ module.exports = function(socket) {
         .catch(err => {
           console.log(err);
         });
-      } 
-      // else if (action.type === 'server/user-disconnected') {
+      } else if (action.type === 'server/user-disconnected') {
+        console.log('all ', connectedUsers)
+        connectedUsers = removeUser(connectedUsers, action.user.id);
+        io.emit('action', {type: '', users: connectedUsers});
+        console.log('disconnected ', connectedUsers)
 
-      // }
+      }
     });
 }
 
@@ -117,6 +120,9 @@ const createCasesArray = (results) => {
   return cases;
 }
 
+const removeUser =(connectedUsers, id) => {
+  return connectedUsers.filter(user => user.userId !== id);
+}
 
 
 
