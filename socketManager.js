@@ -10,20 +10,19 @@ module.exports = function(socket) {
       if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
-        connectedUsers.push({login: user.login, role: user.role, level: user.level, socketId: user.socketId})
+        connectedUsers.push({userId: user.id, role: user.role, level: user.level, socketId: user.socketId})
         emitFreeCases(socket, connectedUsers);
         if(user.role === 'hero') {
           emitHeroCases(socket, user)
-        } else if (user.role === 'needer') {
+        } else {
           emitNeederCases(socket, user);
         }
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
-        console.log('Message from socket: ', message)
         message.timeStamp = new Date(Date.now());
-        if(message.reciever in connectedUsers) {
-          let recieverSocket = connectedUsers[message.reciever].socketId;
+        if(connectedUsers.find((user) => user.userId === message.reciever)) {
+          let recieverSocket = connectedUsers.find((user) => user.userId === message.reciever).socketId;
           io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
         }
         ActiveCase.findOne({_id: message.caseId})
@@ -71,7 +70,7 @@ const emitNeederCases = (socket, user) => {
   .exec()
   .then(results => {
     let cases = createCasesArray(results);
-    socket.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+    io.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
 
   })
   .catch(err => {
