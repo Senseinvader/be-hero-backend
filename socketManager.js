@@ -10,7 +10,9 @@ module.exports = function(socket) {
       if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
-        connectedUsers.push({userId: user.id, role: user.role, level: user.level, socketId: user.socketId})
+        socket.user = user;
+        console.log('socket user ',socket.user);
+        connectedUsers.push({userId: user.id, role: user.role, level: user.level, socketId: user.socketId});
         emitFreeCases(socket, connectedUsers);
         if(user.role === 'hero') {
           emitHeroCases(socket, user)
@@ -25,26 +27,26 @@ module.exports = function(socket) {
           let recieverSocket = connectedUsers.find((user) => user.userId === message.reciever).socketId;
           io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
         }
+        if (!connectedUsers.find((user) => user.userId === message.reciever)) {
+          console.log('Reciever is offline, message was added to DB');
+        }
         ActiveCase.findOne({_id: message.caseId})
         .exec()
         .then(activeCase => {
           activeCase.dialog.push(message);
           activeCase.save();
         })
-        .then(() => {
-          console.log('Reciever is offline, message was added to DB');
-        })
         .catch(err => {
           console.log(err);
         });
       } else if (action.type === 'server/user-disconnected') {
-        console.log('all ', connectedUsers)
-        connectedUsers = removeUser(connectedUsers, action.user.id);
-        io.emit('action', {type: '', users: connectedUsers});
-        console.log('disconnected ', connectedUsers)
-
+        disconnectUser(socket.user.id);
       }
     });
+
+    socket.on('disconnect', () => {
+      disconnectUser(socket.user.id);
+    })
 }
 
 const emitFreeCases = (socket, connectedUsers) => {
@@ -122,6 +124,13 @@ const createCasesArray = (results) => {
 
 const removeUser =(connectedUsers, id) => {
   return connectedUsers.filter(user => user.userId !== id);
+}
+
+const disconnectUser = (id) => {
+  console.log('all ', connectedUsers)
+  connectedUsers = removeUser(connectedUsers, id);
+  io.emit('action', {type: '', users: connectedUsers});
+  console.log('disconnected ', connectedUsers)
 }
 
 
