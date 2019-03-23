@@ -4,6 +4,7 @@ const User = require('../models/user');
 const mongoose = require('mongoose');
 const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 router.post('/', (req, res, next) => {
   User.find({email:req.body.email})
@@ -36,10 +37,12 @@ router.post('/', (req, res, next) => {
             hero
             .save()
             .then(result => {
-                console.log(result);
+                const heroToken = createToken(result.email, result._id);
                 res.status(201).json({
                     message: "Hero has created",
-                    hero: hero
+                    user: hero,
+                    token: heroToken,
+                    sessionId: hero.sessionId
                 });
             })
             .catch(err => console.log(err));
@@ -59,10 +62,12 @@ router.post('/', (req, res, next) => {
           needer
           .save()
           .then(result => {
-              console.log(result);
+              const neederToken = createToken(result.email, result._id);
               res.status(201).json({
                   message: "Needer has created",
-                  needer: needer
+                  user: needer,
+                  token: neederToken,
+                  sessionId: needer.sessionId
               });
           })
           .catch(err => {
@@ -93,5 +98,18 @@ router.delete('/:userId', (req, res, next) => {
     });
   });
 });
+
+function createToken(email, id) {
+  return jwt.sign(
+    {
+      email: email,
+      userId: id
+    },
+    "secret", // Or process.env.JWT_KEY , which somewhy doesn't work
+    {
+      expiresIn: "1h"
+    }
+  );
+}
 
 module.exports = router;
