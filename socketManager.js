@@ -45,8 +45,10 @@ module.exports = function(socket) {
     });
 
     socket.on('disconnect', () => {
-      disconnectUser(socket.user.id);
-    })
+      if(socket.user) {
+        disconnectUser(socket.user.id);
+      }
+    });
 }
 
 const emitFreeCases = (socket, connectedUsers) => {
