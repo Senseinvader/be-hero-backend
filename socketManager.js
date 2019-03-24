@@ -15,11 +15,9 @@ module.exports = function(socket) {
         console.log('socket user ',socket.user);
         connectedUsers.push({userId: user.id, role: user.role, level: user.level, socketId: user.socketId});
         emitFreeCases(socket, connectedUsers);
-        if(user.role === 'hero') {
-          emitHeroCases(socket, user)
-        } else {
+        (user.role === 'hero') ?
+          emitHeroCases(socket, user) :
           emitNeederCases(socket, user);
-        }
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
@@ -40,6 +38,7 @@ module.exports = function(socket) {
         .catch(err => {
           console.log(err);
         });
+
       } else if (action.type === 'server/case-created') {
         const user = action.message.user;
         const description = action.message.description;
@@ -55,22 +54,18 @@ module.exports = function(socket) {
         });
         activeCase
         .save()
-        .then(result => {
+        .then(() => {
           emitFreeCases(socket, connectedUsers);
         })
         .catch(err => console.log(err));
 
       } else if (action.type === 'server/user-disconnected') {
-        if(socket.user) {
-          disconnectUser(socket.user.id);
-        }
+        disconnectUser(socket);
       }
     });
 
     socket.on('disconnect', () => {
-      if(socket.user) {
-        disconnectUser(socket.user.id);
-      }
+      disconnectUser(socket);
     });
 }
 
@@ -151,11 +146,13 @@ const removeUser =(connectedUsers, id) => {
   return connectedUsers.filter(user => user.userId !== id);
 }
 
-const disconnectUser = (id) => {
-  console.log('all ', connectedUsers)
-  connectedUsers = removeUser(connectedUsers, id);
-  io.emit('action', {type: '', users: connectedUsers});
-  console.log('disconnected ', connectedUsers)
+const disconnectUser = (socket) => {
+  if(socket.user) {
+    console.log('all ', connectedUsers)
+    connectedUsers = removeUser(connectedUsers, socket.user.id);
+    io.emit('action', {type: 'USER_DISCONNECTED', users: connectedUsers});
+    console.log('disconnected ', connectedUsers)
+  }
 }
 
 
