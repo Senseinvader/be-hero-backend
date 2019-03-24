@@ -40,7 +40,9 @@ module.exports = function(socket) {
           console.log(err);
         });
       } else if (action.type === 'server/user-disconnected') {
-        disconnectUser(socket.user.id);
+        if(socket.user) {
+          disconnectUser(socket.user.id);
+        }
       }
     });
 
