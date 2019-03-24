@@ -4,15 +4,13 @@ const mongoose = require('mongoose');
 
 let connectedUsers = [];
 
-let chats = [];
-
 module.exports = function(socket) {
   socket.on('action', (action) => {
       if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
         socket.user = user;
-        addUser(connectedUsers, user);
+        connectedUsers = addUser(connectedUsers, user);
         emitFreeCases(socket, connectedUsers);
         (user.role === 'hero') ?
           emitHeroCases(socket, user) :
