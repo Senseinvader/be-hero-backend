@@ -1,5 +1,6 @@
 const io = require('./server').io;
 const ActiveCase = require('./api/models/activeCase');
+const mongoose = require('mongoose');
 
 let connectedUsers = [];
 
@@ -39,6 +40,26 @@ module.exports = function(socket) {
         .catch(err => {
           console.log(err);
         });
+      } else if (action.type === 'server/case-created') {
+        const user = action.message.user;
+        const description = action.message.description;
+        const activeCase = new ActiveCase({
+          _id: new mongoose.Types.ObjectId(),
+          neederId: user._id,
+          neederLogin: user.login,
+          heroId: null,
+          description: description,
+          done: false,
+          dialog: [],
+          timeStamp: new Date(Date.now())
+        });
+        activeCase
+        .save()
+        .then(result => {
+          emitFreeCases(socket, connectedUsers);
+        })
+        .catch(err => console.log(err));
+
       } else if (action.type === 'server/user-disconnected') {
         if(socket.user) {
           disconnectUser(socket.user.id);
