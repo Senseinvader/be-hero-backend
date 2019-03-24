@@ -12,8 +12,7 @@ module.exports = function(socket) {
         let user = action.user;
         user.socketId = socket.id;
         socket.user = user;
-        console.log('socket user ',socket.user);
-        connectedUsers.push({userId: user.id, role: user.role, level: user.level, socketId: user.socketId});
+        addUser(connectedUsers, user);
         emitFreeCases(socket, connectedUsers);
         (user.role === 'hero') ?
           emitHeroCases(socket, user) :
@@ -22,11 +21,11 @@ module.exports = function(socket) {
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
         message.timeStamp = new Date(Date.now());
-        if(connectedUsers.find((user) => user.userId === message.reciever)) {
-          let recieverSocket = connectedUsers.find((user) => user.userId === message.reciever).socketId;
+        if(connectedUsers.find((user) => user.id === message.reciever)) {
+          let recieverSocket = connectedUsers.find((user) => user.id === message.reciever).socketId;
           io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
         }
-        if (!connectedUsers.find((user) => user.userId === message.reciever)) {
+        if (!connectedUsers.find((user) => user.id === message.reciever)) {
           console.log('Reciever is offline, message was added to DB');
         }
         ActiveCase.findOne({_id: message.caseId})
@@ -143,7 +142,11 @@ const createCasesArray = (results) => {
 }
 
 const removeUser =(connectedUsers, id) => {
-  return connectedUsers.filter(user => user.userId !== id);
+  return connectedUsers.filter(user => user.id !== id);
+}
+
+const addUser = (connectedUsers, user) => {
+  return [...connectedUsers, user];
 }
 
 const disconnectUser = (socket) => {
@@ -154,24 +157,3 @@ const disconnectUser = (socket) => {
     console.log('disconnected ', connectedUsers)
   }
 }
-
-
-
-        // const cases = {
-        //     activeCases: results.map(result => {
-        //         return {
-        //             _id: result._id,
-        //             description: result.description,
-        //             neederId: result.neederId,
-        //             heroId: result.heroId,
-        //             done: result.done,
-        //             dialog: result.dialog
-        //             request: {
-        //                 type: 'GET',
-        //                 message: 'The link to see all available cases',
-        //                 url: 'http://localhost:3000/hero-main/'
-        //             }
-        //         }
-        //     })
-        // }
-        // return cases;
