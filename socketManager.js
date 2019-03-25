@@ -57,6 +57,24 @@ module.exports = function(socket) {
         })
         .catch(err => console.log(err));
 
+      } else if (action.type === 'server/case-taken') {
+        console.log('Case Taken: ', action.message);
+        const caseId = action.message.caseId;
+        const user = action.message.user;
+        ActiveCase.findOneAndUpdate(
+          {
+              $and: [
+                  {_id: caseId}, {done: false}, { heroId: null }
+              ]
+          },
+          {heroId: user.id},
+          {new: true}
+      )
+      .exec()
+      .then(result => {
+        emitFreeCases(socket, connectedUsers);
+      })
+
       } else if (action.type === 'server/user-disconnected') {
         disconnectUser(socket);
       }
