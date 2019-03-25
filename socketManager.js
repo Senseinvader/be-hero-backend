@@ -45,7 +45,7 @@ module.exports = function(socket) {
         const description = action.message.description;
         const activeCase = new ActiveCase({
           _id: new mongoose.Types.ObjectId(),
-          neederId: user._id,
+          neederId: user.id,
           neederLogin: user.login,
           heroId: null,
           description: description,
@@ -57,6 +57,7 @@ module.exports = function(socket) {
         .save()
         .then(result => {
           emitFreeCases(socket, connectedUsers);
+          emitNeederCases(socket, user);
         })
         .catch(err => console.log(err));
 
