@@ -13,8 +13,8 @@ module.exports = function(socket) {
         connectedUsers = addUser(connectedUsers, user);
         emitFreeCases(socket, connectedUsers);
         (user.role === 'hero') 
-          ? emitHeroCases(socket.id, user) 
-          : emitNeederCases(socket.id, user);
+          ? emitHeroCases(socket.id, user.id) 
+          : emitNeederCases(socket.id, user.id);
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
@@ -53,7 +53,7 @@ module.exports = function(socket) {
         .save()
         .then(() => {
           emitFreeCases(socket, connectedUsers);
-          emitNeederCases(socket.id, user);
+          emitNeederCases(socket.id, user.id);
         })
         .catch(err => console.log(err));
 
@@ -96,7 +96,7 @@ const emitFreeCases = (socket, connectedUsers) => {
     });
 }
 
-const emitHeroCases = (socketId, user) => {
+const emitHeroCases = (socketId, userId) => {
   ActiveCase.find({heroId: user.id})
     .exec()
     .then(results => {
@@ -108,8 +108,8 @@ const emitHeroCases = (socketId, user) => {
     });
 }
 
-const emitNeederCases = (socketId, user) => {
-  ActiveCase.find({neederId: user.id})
+const emitNeederCases = (socketId, userId) => {
+  ActiveCase.find({neederId: userId})
   .exec()
   .then(results => {
     let cases = createCasesArray(results);
