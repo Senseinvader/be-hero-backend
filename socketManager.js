@@ -4,31 +4,26 @@ const mongoose = require('mongoose');
 
 let connectedUsers = [];
 
-let chats = [];
-
 module.exports = function(socket) {
   socket.on('action', (action) => {
       if (action.type == 'server/user-connected') {
         let user = action.user;
         user.socketId = socket.id;
         socket.user = user;
-        console.log('socket user ',socket.user);
-        connectedUsers.push({userId: user.id, role: user.role, level: user.level, socketId: user.socketId});
+        connectedUsers = addUser(connectedUsers, user);
         emitFreeCases(socket, connectedUsers);
-        if(user.role === 'hero') {
-          emitHeroCases(socket, user)
-        } else {
+        (user.role === 'hero') ?
+          emitHeroCases(socket, user) :
           emitNeederCases(socket, user);
-        }
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
         message.timeStamp = new Date(Date.now());
-        if(connectedUsers.find((user) => user.userId === message.reciever)) {
-          let recieverSocket = connectedUsers.find((user) => user.userId === message.reciever).socketId;
+        if(connectedUsers.find((user) => user.id === message.reciever)) {
+          let recieverSocket = connectedUsers.find((user) => user.id === message.reciever).socketId;
           io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
         }
-        if (!connectedUsers.find((user) => user.userId === message.reciever)) {
+        if (!connectedUsers.find((user) => user.id === message.reciever)) {
           console.log('Reciever is offline, message was added to DB');
         }
         ActiveCase.findOne({_id: message.caseId})
@@ -40,6 +35,7 @@ module.exports = function(socket) {
         .catch(err => {
           console.log(err);
         });
+
       } else if (action.type === 'server/case-created') {
         const user = action.message.user;
         const description = action.message.description;
@@ -55,23 +51,19 @@ module.exports = function(socket) {
         });
         activeCase
         .save()
-        .then(result => {
+        .then(() => {
           emitFreeCases(socket, connectedUsers);
           emitNeederCases(socket, user);
         })
         .catch(err => console.log(err));
 
       } else if (action.type === 'server/user-disconnected') {
-        if(socket.user) {
-          disconnectUser(socket.user.id);
-        }
+        disconnectUser(socket);
       }
     });
 
     socket.on('disconnect', () => {
-      if(socket.user) {
-        disconnectUser(socket.user.id);
-      }
+      disconnectUser(socket);
     });
 }
 
@@ -149,33 +141,18 @@ const createCasesArray = (results) => {
 }
 
 const removeUser =(connectedUsers, id) => {
-  return connectedUsers.filter(user => user.userId !== id);
+  return connectedUsers.filter(user => user.id !== id);
 }
 
-const disconnectUser = (id) => {
-  console.log('all ', connectedUsers)
-  connectedUsers = removeUser(connectedUsers, id);
-  io.emit('action', {type: '', users: connectedUsers});
-  console.log('disconnected ', connectedUsers)
+const addUser = (connectedUsers, user) => {
+  return [...connectedUsers, user];
 }
 
-
-
-        // const cases = {
-        //     activeCases: results.map(result => {
-        //         return {
-        //             _id: result._id,
-        //             description: result.description,
-        //             neederId: result.neederId,
-        //             heroId: result.heroId,
-        //             done: result.done,
-        //             dialog: result.dialog
-        //             request: {
-        //                 type: 'GET',
-        //                 message: 'The link to see all available cases',
-        //                 url: 'http://localhost:3000/hero-main/'
-        //             }
-        //         }
-        //     })
-        // }
-        // return cases;
+const disconnectUser = (socket) => {
+  if(socket.user) {
+    console.log('all ', connectedUsers)
+    connectedUsers = removeUser(connectedUsers, socket.user.id);
+    io.emit('action', {type: 'USER_DISCONNECTED', users: connectedUsers});
+    console.log('disconnected ', connectedUsers)
+  }
+}
