@@ -58,6 +58,10 @@ module.exports = function(socket) {
 
       } else if (action.type === 'server/user-disconnected') {
         disconnectUser(socket);
+
+      } else if(action.type ==='server/user-is-typing') {
+        let recieverSocket = connectedUsers.find((user) => user.id === action.messageReciever).socketId;
+        io.to(recieverSocket).emit('action', {type: 'IS_TYPING', isTyping: action.isTyping, sender: action.messageSender});
       }
     });
 
