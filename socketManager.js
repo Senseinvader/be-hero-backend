@@ -12,9 +12,9 @@ module.exports = function(socket) {
         socket.user = user;
         connectedUsers = addUser(connectedUsers, user);
         emitFreeCases(socket, connectedUsers);
-        (user.role === 'hero') ?
-          emitHeroCases(socket, user) :
-          emitNeederCases(socket, user);
+        (user.role === 'hero') 
+          ? emitHeroCases(socket.id, user) 
+          : emitNeederCases(socket.id, user);
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
@@ -53,12 +53,11 @@ module.exports = function(socket) {
         .save()
         .then(() => {
           emitFreeCases(socket, connectedUsers);
-          emitNeederCases(socket, user);
+          emitNeederCases(socket.id, user);
         })
         .catch(err => console.log(err));
 
       } else if (action.type === 'server/case-taken') {
-        console.log('Case Taken: ', action.message);
         const caseId = action.message.caseId;
         const user = action.message.user;
         ActiveCase.findOneAndUpdate(
@@ -97,24 +96,24 @@ const emitFreeCases = (socket, connectedUsers) => {
     });
 }
 
-const emitHeroCases = (socket, user) => {
+const emitHeroCases = (socketId, user) => {
   ActiveCase.find({heroId: user.id})
     .exec()
     .then(results => {
       let cases = createCasesArray(results);
-      io.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+      io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
     })
     .catch(err => {
         console.log(err)
     });
 }
 
-const emitNeederCases = (socket, user) => {
+const emitNeederCases = (socketId, user) => {
   ActiveCase.find({neederId: user.id})
   .exec()
   .then(results => {
     let cases = createCasesArray(results);
-    io.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+    io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
 
   })
   .catch(err => {
