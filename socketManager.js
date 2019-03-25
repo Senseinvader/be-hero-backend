@@ -12,9 +12,9 @@ module.exports = function(socket) {
         socket.user = user;
         connectedUsers = addUser(connectedUsers, user);
         emitFreeCases(socket, connectedUsers);
-        (user.role === 'hero') ?
-          emitHeroCases(socket, user) :
-          emitNeederCases(socket, user);
+        (user.role === 'hero') 
+          ? emitHeroCases(socket.id, user.id) 
+          : emitNeederCases(socket.id, user.id);
 
       } else if (action.type === 'server/message-sent') {
         let message = action.message;
@@ -41,7 +41,7 @@ module.exports = function(socket) {
         const description = action.message.description;
         const activeCase = new ActiveCase({
           _id: new mongoose.Types.ObjectId(),
-          neederId: user._id,
+          neederId: user.id,
           neederLogin: user.login,
           heroId: null,
           description: description,
@@ -53,8 +53,26 @@ module.exports = function(socket) {
         .save()
         .then(() => {
           emitFreeCases(socket, connectedUsers);
+          emitNeederCases(socket.id, user.id);
         })
         .catch(err => console.log(err));
+
+      } else if (action.type === 'server/case-taken') {
+        const caseId = action.message.caseId;
+        const user = action.message.user;
+        ActiveCase.findOneAndUpdate(
+          {
+              $and: [
+                  {_id: caseId}, {done: false}, { heroId: null }
+              ]
+          },
+          {heroId: user.id},
+          {new: true}
+      )
+      .exec()
+      .then(result => {
+        emitFreeCases(socket, connectedUsers);
+      })
 
       } else if (action.type === 'server/user-disconnected') {
         disconnectUser(socket);
@@ -82,24 +100,24 @@ const emitFreeCases = (socket, connectedUsers) => {
     });
 }
 
-const emitHeroCases = (socket, user) => {
+const emitHeroCases = (socketId, userId) => {
   ActiveCase.find({heroId: user.id})
     .exec()
     .then(results => {
       let cases = createCasesArray(results);
-      io.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+      io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
     })
     .catch(err => {
         console.log(err)
     });
 }
 
-const emitNeederCases = (socket, user) => {
-  ActiveCase.find({neederId: user.id})
+const emitNeederCases = (socketId, userId) => {
+  ActiveCase.find({neederId: userId})
   .exec()
   .then(results => {
     let cases = createCasesArray(results);
-    io.to(socket.id).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
+    io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
 
   })
   .catch(err => {
