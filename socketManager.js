@@ -11,7 +11,7 @@ module.exports = function(socket) {
         user.socketId = socket.id;
         socket.user = user;
         connectedUsers = addUser(connectedUsers, user);
-        emitFreeCases(socket, connectedUsers);
+        emitPrivateFreeCases(socket, connectedUsers);
         (user.role === 'hero') 
           ? emitHeroCases(socket.id, user.id) 
           : emitNeederCases(socket.id, user.id);
@@ -52,12 +52,13 @@ module.exports = function(socket) {
         activeCase
         .save()
         .then(() => {
-          emitFreeCases(socket, connectedUsers);
+          emitPublicFreeCases(socket, connectedUsers);
           emitNeederCases(socket.id, user.id);
         })
         .catch(err => console.log(err));
 
       } else if (action.type === 'server/case-taken') {
+        console.log('needer id: ', action.message.neederId)
         const caseId = action.message.caseId;
         const user = action.message.user;
         ActiveCase.findOneAndUpdate(
@@ -71,7 +72,9 @@ module.exports = function(socket) {
       )
       .exec()
       .then(result => {
-        emitFreeCases(socket, connectedUsers);
+        emitPublicFreeCases(socket, connectedUsers);
+        emitHeroCases(socket.id, user.id);
+        // TODO notify about case taken
       })
 
       } else if (action.type === 'server/user-disconnected') {
@@ -84,7 +87,7 @@ module.exports = function(socket) {
     });
 }
 
-const emitFreeCases = (socket, connectedUsers) => {
+const emitPrivateFreeCases = (socket, connectedUsers) => {
     ActiveCase.find({heroId: null})
     .exec()
     .then(results => {
@@ -96,8 +99,20 @@ const emitFreeCases = (socket, connectedUsers) => {
     });
 }
 
+const emitPublicFreeCases = (socket, connectedUsers) => {
+  ActiveCase.find({heroId: null})
+  .exec()
+  .then(results => {
+    let cases = createCasesArray(results);
+    io.sockets.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: cases})
+  })
+  .catch(err => {
+      console.log(err);
+  });
+}
+
 const emitHeroCases = (socketId, userId) => {
-  ActiveCase.find({heroId: user.id})
+  ActiveCase.find({heroId: userId})
     .exec()
     .then(results => {
       let cases = createCasesArray(results);
