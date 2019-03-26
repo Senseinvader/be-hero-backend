@@ -32,9 +32,11 @@ module.exports = function(socket) {
           activeCase.dialog.push(message);
           activeCase.save();
         })
-        .catch(err => {
-          console.log(err);
-        });
+        .catch(err => socket.emit('action', {
+          type: 'DISPLAY_SNACKBAR_MESSAGE', 
+          snackbarVariant: 'error', 
+          snackbarMessage: err
+        }));
 
       } else if (action.type === 'server/case-created') {
         const user = action.message.user;
@@ -54,11 +56,19 @@ module.exports = function(socket) {
         .then(() => {
           emitPublicFreeCases(socket, connectedUsers);
           emitNeederCases(socket.id, user.id);
+          socket.emit('action', {
+            type: 'DISPLAY_SNACKBAR_MESSAGE', 
+            snackbarVariant: 'info', 
+            snackbarMessage: 'Case have been created.'
+          });
         })
-        .catch(err => console.log(err));
+        .catch(err => socket.emit('action', {
+          type: 'DISPLAY_SNACKBAR_MESSAGE', 
+          snackbarVariant: 'error', 
+          snackbarMessage: err
+        }));
 
       } else if (action.type === 'server/case-taken') {
-        console.log('needer id: ', action.message.neederId)
         const caseId = action.message.caseId;
         const user = action.message.user;
         ActiveCase.findOneAndUpdate(
@@ -76,6 +86,11 @@ module.exports = function(socket) {
         emitHeroCases(socket.id, user.id);
         // TODO notify about case taken
       })
+      .catch(err => socket.emit('action', {
+        type: 'DISPLAY_SNACKBAR_MESSAGE', 
+        snackbarVariant: 'error', 
+        snackbarMessage: err
+      }));
 
       } else if (action.type === 'server/user-disconnected') {
         disconnectUser(socket);
@@ -98,9 +113,11 @@ const emitPrivateFreeCases = (socket, connectedUsers) => {
       let cases = createCasesArray(results);
       socket.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: cases})
     })
-    .catch(err => {
-        console.log(err);
-    });
+    .catch(err => socket.emit('action', {
+      type: 'DISPLAY_SNACKBAR_MESSAGE', 
+      snackbarVariant: 'error', 
+      snackbarMessage: err
+    }));
 }
 
 const emitPublicFreeCases = (socket, connectedUsers) => {
@@ -110,9 +127,7 @@ const emitPublicFreeCases = (socket, connectedUsers) => {
     let cases = createCasesArray(results);
     io.sockets.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: cases})
   })
-  .catch(err => {
-      console.log(err);
-  });
+  .catch(err => console.log(err));
 }
 
 const emitHeroCases = (socketId, userId) => {
@@ -168,9 +183,11 @@ const createCasesArray = (results) => {
         _id: result.id,
         description: result.description,
         neederId: result.neederId,
+        neederLogin: result.neederLogin,
         heroId: result.heroId,
         done: result.done,
-        dialog: result.dialog
+        dialog: result.dialog,
+        timeStamp: result.timeStamp
       }
     })
   return cases;
