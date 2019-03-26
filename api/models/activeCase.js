@@ -19,6 +19,7 @@ const activeCaseSchema = mongoose.Schema({
     done: Boolean,
     dialog: [Message],
     timeStamp: Date,
+    personalData: String,
     // If case status changed notify user about it
     newMessages: Number,
     caseStatusChanged: Boolean

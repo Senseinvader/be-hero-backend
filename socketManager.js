@@ -49,7 +49,8 @@ module.exports = function(socket) {
           description: description,
           done: false,
           dialog: [],
-          timeStamp: new Date(Date.now())
+          timeStamp: new Date(Date.now()),
+          personalData: user.description
         });
         activeCase
         .save()
