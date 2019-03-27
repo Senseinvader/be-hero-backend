@@ -1,5 +1,6 @@
 const io = require('./server').io;
 const ActiveCase = require('./api/models/activeCase');
+const User = require('./api/models/user');
 const mongoose = require('mongoose');
 
 let connectedUsers = [];
@@ -95,6 +96,45 @@ module.exports = function(socket) {
         snackbarVariant: 'error', 
         snackbarMessage: err
       }));
+
+      } else if (action.type === 'server/case-completed') {
+        const completedCase = action.message.completedCase;
+        User.find(
+          {
+              $and: [
+                  { _id: completedCase.heroId }
+              ]
+          },
+          { level: 2 }
+      )
+      .exec()
+      .then(result => {
+        let newLevel = Number(result[0].level)
+        newLevel++;
+        User.findOneAndUpdate(
+          {
+              $and: [
+                  { _id: completedCase.heroId }
+              ]
+          },
+          { level: newLevel }
+      )
+      .exec()
+      .then(result => {
+        let recieverSocket = connectedUsers.find((user) => user.id === completedCase.heroId).socketId;
+        io.to(recieverSocket).emit('action', {type: 'INCREMENT_HERO_LEVEL', newLevel: newLevel});
+      })
+      ActiveCase.deleteOne({ _id: completedCase._id })
+      .exec()
+      .then(result => {
+        let recieverSocket = connectedUsers.find((user) => user.id === completedCase.neederId).socketId;
+        emitNeederCases(recieverSocket, completedCase.neederId);
+        let recieverSocketHero = connectedUsers.find((user) => user.id === completedCase.heroId).socketId;
+        emitHeroCases(recieverSocketHero, completedCase.heroId);
+      })
+      .catch(err => console.log(err));
+      })
+      .catch(err => console.log(err));
 
       } else if (action.type === 'server/user-disconnected') {
         disconnectUser(socket);
