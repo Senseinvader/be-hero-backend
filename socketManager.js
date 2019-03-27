@@ -71,6 +71,7 @@ module.exports = function(socket) {
 
       } else if (action.type === 'server/case-taken') {
         const caseId = action.message.caseId;
+        const neederId = action.message.neederId;
         const user = action.message.user;
         ActiveCase.findOneAndUpdate(
           {
@@ -85,6 +86,8 @@ module.exports = function(socket) {
       .then(result => {
         emitPublicFreeCases(socket, connectedUsers);
         emitHeroCases(socket.id, user.id);
+        const neederSocketId = connectedUsers.find((user) => user.id === neederId).socketId;
+        emitNeederCases(neederSocketId, neederId);
         // TODO notify about case taken
       })
       .catch(err => socket.emit('action', {
