@@ -140,7 +140,7 @@ module.exports = function(socket) {
         disconnectUser(socket);
 
       } else if(action.type ==='server/user-is-typing') {
-        if(connectedUsers.includes(action.messageReciever)) {
+        if(connectedUsers.find((user)=> user.id === action.messageReciever)) {
           let recieverSocket = connectedUsers.find((user) => user.id === action.messageReciever).socketId;
           io.to(recieverSocket).emit('action', {type: 'IS_TYPING', isTyping: action.isTyping, sender: action.messageSender});
         }
