@@ -1,164 +1,70 @@
 const io = require('./server').io;
 const ActiveCase = require('./api/models/activeCase');
-const User = require('./api/models/user');
-const mongoose = require('mongoose');
+const ConnectedUsers = require('./api/models/connectedUsers');
+const ActiveCaseRepository = require('./api/repositories/activeCaseRepository');
+const UserRepository = require('./api/repositories/userRepository');
 
-let connectedUsers = [];
+const connectedUsersManager = new ConnectedUsers();
+const activeCaseRepository = new ActiveCaseRepository();
+const userRepository = new UserRepository();
 
 module.exports = function(socket) {
   socket.on('action', (action) => {
-      if (action.type == 'server/user-connected') {
-        let user = action.user;
-        user.socketId = socket.id;
-        socket.user = user;
-        connectedUsers = addUser(connectedUsers, user);
-        emitPrivateFreeCases(socket, connectedUsers);
-        (user.role === 'hero') 
-          ? emitHeroCases(socket.id, user.id) 
-          : emitNeederCases(socket.id, user.id);
+    switch (action.type) {
+      case 'server/user-connected':
+        handleUserConnectedAction(action, socket);
+        break;
+      case 'server/message-sent':
+        handleMessageSentAction(action, socket);
+        break;
+      case 'server/user-disconnected':
+        handleUserDisconnectedAction(socket);
+        break;
+      case 'server/case-created':
+        handleCaseCreatedAction(action, socket);
+        break;
+      case 'server/case-taken':
+        handleCaseTakenAction(action, socket);
+        break;
+      case 'server/case-completed':
+        handleCaseCompletedAction(action);
+        break;
+      case 'server/user-is-typing':
+        handleUserIsTyping(action);
+        break;
+    }
+  });
 
-      } else if (action.type === 'server/message-sent') {
-        let message = action.message;
-        message.timeStamp = new Date(Date.now());
-        if(connectedUsers.find((user) => user.id === message.reciever)) {
-          let recieverSocket = connectedUsers.find((user) => user.id === message.reciever).socketId;
-          io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
-        }
-        if (!connectedUsers.find((user) => user.id === message.reciever)) {
-          console.log('Reciever is offline, message was added to DB');
-        }
-        ActiveCase.findOne({_id: message.caseId})
-        .exec()
-        .then(activeCase => {
-          activeCase.dialog.push(message);
-          activeCase.save();
-        })
-        .catch(err => socket.emit('action', {
-          type: 'DISPLAY_SNACKBAR_MESSAGE', 
-          snackbarVariant: 'error', 
-          snackbarMessage: err
-        }));
-
-      } else if (action.type === 'server/case-created') {
-        const user = action.message.user;
-        const description = action.message.description;
-        const activeCase = new ActiveCase({
-          _id: new mongoose.Types.ObjectId(),
-          neederId: user.id,
-          neederLogin: user.login,
-          heroId: null,
-          description: description,
-          done: false,
-          dialog: [],
-          timeStamp: new Date(Date.now()),
-          personalData: user.description
-        });
-        activeCase
-        .save()
-        .then(() => {
-          emitPublicFreeCases(socket, connectedUsers);
-          emitNeederCases(socket.id, user.id);
-          socket.emit('action', {
-            type: 'DISPLAY_SNACKBAR_MESSAGE', 
-            snackbarVariant: 'info', 
-            snackbarMessage: 'Case have been created.'
-          });
-        })
-        .catch(err => socket.emit('action', {
-          type: 'DISPLAY_SNACKBAR_MESSAGE', 
-          snackbarVariant: 'error', 
-          snackbarMessage: err
-        }));
-
-      } else if (action.type === 'server/case-taken') {
-        const caseId = action.message.caseId;
-        const neederId = action.message.neederId;
-        const user = action.message.user;
-        ActiveCase.findOneAndUpdate(
-          {
-              $and: [
-                  {_id: caseId}, {done: false}, { heroId: null }
-              ]
-          },
-          {heroId: user.id},
-          {new: true}
-      )
-      .exec()
-      .then(result => {
-        emitPublicFreeCases(socket, connectedUsers);
-        emitHeroCases(socket.id, user.id);
-        const neederSocketId = connectedUsers.find((user) => user.id === neederId).socketId;
-        emitNeederCases(neederSocketId, neederId);
-        // TODO notify about case taken
-      })
-      .catch(err => socket.emit('action', {
-        type: 'DISPLAY_SNACKBAR_MESSAGE', 
-        snackbarVariant: 'error', 
-        snackbarMessage: err
-      }));
-
-      } else if (action.type === 'server/case-completed') {
-        const completedCase = action.message.completedCase;
-        User.find(
-          {
-              $and: [
-                  { _id: completedCase.heroId }
-              ]
-          },
-          { level: 2 }
-      )
-      .exec()
-      .then(result => {
-        let newLevel = Number(result[0].level)
-        newLevel++;
-        User.findOneAndUpdate(
-          {
-              $and: [
-                  { _id: completedCase.heroId }
-              ]
-          },
-          { level: newLevel }
-      )
-      .exec()
-      .then(result => {
-        let recieverSocket = connectedUsers.find((user) => user.id === completedCase.heroId).socketId;
-        io.to(recieverSocket).emit('action', {type: 'INCREMENT_HERO_LEVEL', newLevel: newLevel});
-      })
-      ActiveCase.deleteOne({ _id: completedCase._id })
-      .exec()
-      .then(result => {
-        let recieverSocket = connectedUsers.find((user) => user.id === completedCase.neederId).socketId;
-        emitNeederCases(recieverSocket, completedCase.neederId);
-        let recieverSocketHero = connectedUsers.find((user) => user.id === completedCase.heroId).socketId;
-        emitHeroCases(recieverSocketHero, completedCase.heroId);
-      })
-      .catch(err => console.log(err));
-      })
-      .catch(err => console.log(err));
-
-      } else if (action.type === 'server/user-disconnected') {
-        disconnectUser(socket);
-
-      } else if(action.type ==='server/user-is-typing') {
-        if(connectedUsers.find((user)=> user.id === action.messageReciever)) {
-          let recieverSocket = connectedUsers.find((user) => user.id === action.messageReciever).socketId;
-          io.to(recieverSocket).emit('action', {type: 'IS_TYPING', isTyping: action.isTyping, sender: action.messageSender});
-        }
-      }
-    });
-
-    socket.on('disconnect', () => {
-      disconnectUser(socket);
-    });
+  socket.on('disconnect', () => {
+    handleUserDisconnectedAction(socket);
+  });
 }
 
-const emitPrivateFreeCases = (socket, connectedUsers) => {
-    ActiveCase.find({heroId: null})
-    .exec()
-    .then(results => {
-      let cases = createCasesArray(results);
-      socket.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: cases})
-    })
+const handleUserConnectedAction = (action, socket) => {
+  connectedUsersManager.addUser(action.user, socket.id);
+  activeCaseRepository.getFreeCases()
+  .then(results => {
+    socket.emit('action', {type: 'USER_CONNECTED', users: connectedUsersManager.getConnectedUserList(), freeCases: createCasesArray(results)});
+  })
+  .catch(err => socket.emit('action', {
+      type: 'DISPLAY_SNACKBAR_MESSAGE', 
+      snackbarVariant: 'error', 
+      snackbarMessage: err
+    }));
+    emitUserCases(socket.id, action.user);
+}
+
+const handleMessageSentAction = (action, socket) => {
+  let message = action.message;
+  message.timeStamp = new Date(Date.now());
+  if(connectedUsersManager.getByUserId(message.reciever)) {
+    let recieverSocket = connectedUsersManager.getByUserId(message.reciever).socketId;
+    io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
+  }
+  if (!connectedUsersManager.getByUserId(message.reciever)) {
+    console.log('Reciever is offline, message was added to DB');
+  }
+  activeCaseRepository.addMessage(message)
     .catch(err => socket.emit('action', {
       type: 'DISPLAY_SNACKBAR_MESSAGE', 
       snackbarVariant: 'error', 
@@ -166,61 +72,89 @@ const emitPrivateFreeCases = (socket, connectedUsers) => {
     }));
 }
 
-const emitPublicFreeCases = (socket, connectedUsers) => {
-  ActiveCase.find({heroId: null})
-  .exec()
-  .then(results => {
-    let cases = createCasesArray(results);
-    io.sockets.emit('action', {type: 'USER_CONNECTED', users: connectedUsers, freeCases: cases})
+const handleCaseCreatedAction = (action, socket) => {
+  const user = action.message.user;
+  const description = action.message.description;
+  activeCaseRepository.createActiveCase(description, user)
+  .then(() => {
+    emitPublicFreeCases();
+    emitUserCases(socket.id, user);
+    socket.emit('action', {
+      type: 'DISPLAY_SNACKBAR_MESSAGE', 
+      snackbarVariant: 'info', 
+      snackbarMessage: 'Case have been created.'
+    });
+  })
+  .catch(err => socket.emit('action', {
+    type: 'DISPLAY_SNACKBAR_MESSAGE', 
+    snackbarVariant: 'error', 
+    snackbarMessage: err
+  }));
+}
+
+const handleCaseTakenAction = (action, socket) => {
+  const caseId = action.message.caseId;
+  const neederId = action.message.neederId;
+  const user = action.message.user;
+  activeCaseRepository.markCaseTaken(caseId, user.id)
+  .then(result => {
+    emitPublicFreeCases();
+    emitUserCases(socket.id, user);
+    const neederSocketId = connectedUsersManager.getByUserId(neederId).socketId;
+    emitUserCases(neederSocketId, { id: neederId, role: 'needer' });
+    // TODO notify about case taken
+  })
+  .catch(err => socket.emit('action', {
+    type: 'DISPLAY_SNACKBAR_MESSAGE', 
+    snackbarVariant: 'error', 
+    snackbarMessage: err
+  }));
+}
+
+const handleCaseCompletedAction = (action) => {
+  const completedCase = action.message.completedCase;
+  userRepository.getUserById(completedCase.heroId)
+  .then(result => {
+    let newLevel = Number(result[0].level)
+    newLevel++;
+    userRepository.setUserLevel(completedCase.heroId, newLevel)
+    .then(result => {
+      let recieverSocket = connectedUsersManager.getByUserId(completedCase.heroId).socketId;
+      io.to(recieverSocket).emit('action', {type: 'INCREMENT_HERO_LEVEL', newLevel: newLevel});
+    })
+    ActiveCase.deleteOne({ _id: completedCase._id })
+    .exec()
+    .then(result => {
+      let recieverSocket = connectedUsersManager.getByUserId(completedCase.neederId).socketId;
+      emitUserCases(recieverSocket, { id: completedCase.neederId, role: 'needer' });
+      let recieverSocketHero = connectedUsersManager.getByUserId(completedCase.heroId).socketId;
+      emitUserCases(recieverSocketHero, { id: completedCase.heroId, role: 'hero' });
+    })
+    .catch(err => console.log(err));
   })
   .catch(err => console.log(err));
 }
 
-const emitHeroCases = (socketId, userId) => {
-  ActiveCase.find({heroId: userId})
-    .exec()
-    .then(results => {
-      let cases = createCasesArray(results);
-      io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
-    })
-    .catch(err => {
-        console.log(err)
-    });
+const handleUserIsTyping = (action) => {
+  if(connectedUsersManager.getByUserId(action.messageReciever)) {
+    let recieverSocket = connectedUsersManager.getByUserId(action.messageReciever).socketId;
+    io.to(recieverSocket).emit('action', {type: 'IS_TYPING', isTyping: action.isTyping, sender: action.messageSender});
+  }
 }
 
-const emitNeederCases = (socketId, userId) => {
-  ActiveCase.find({neederId: userId})
-  .exec()
+const emitUserCases = (socketId, user) => {
+  activeCaseRepository.getUserCases(user.id, user.role)
   .then(results => {
-    let cases = createCasesArray(results);
-    io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: cases})
-
-  })
-  .catch(err => {
-    console.log(err)
+    io.to(socketId).emit('action', {type: 'ACTIVE_CASES', activeCases: createCasesArray(results)});
   });
 }
 
-const postMessage = (sender, reciever, contents, caseId) => {
-  let message = {
-    sender: sender,
-    reciever: reciever,
-    contents: contents,
-    timeStamp: Date.now()
-  };
-  ActiveCase.findOne(
-    {
-      $and: [
-          {_id: caseId}, { heroId: sender.id }
-      ]
-    })
-    .then(activeCase => {
-      activeCase.dialog.push(message);
-      activeCase.save()
-    })
-    .catch(err => {
-      console.log(err)
-    });
+const emitPublicFreeCases = () => {
+  activeCaseRepository.getFreeCases()
+  .then(results => {
+    io.sockets.emit('action', {type: 'USER_CONNECTED', users: connectedUsersManager.getConnectedUserList(), freeCases: createCasesArray(results)})
+  })
+  .catch(err => console.log(err));
 }
 
 const createCasesArray = (results) => {
@@ -239,19 +173,9 @@ const createCasesArray = (results) => {
   return cases;
 }
 
-const removeUser =(connectedUsers, id) => {
-  return connectedUsers.filter(user => user.id !== id);
-}
-
-const addUser = (connectedUsers, user) => {
-  return [...connectedUsers, user];
-}
-
-const disconnectUser = (socket) => {
+const handleUserDisconnectedAction = (socket) => {
   if(socket.user) {
-    console.log('all ', connectedUsers)
-    connectedUsers = removeUser(connectedUsers, socket.user.id);
-    io.emit('action', {type: 'USER_DISCONNECTED', users: connectedUsers});
-    console.log('disconnected ', connectedUsers)
+    connectedUsersManager.removeByUserId(socket.user.id);
+    io.emit('action', { type: 'USER_DISCONNECTED', users: connectedUsersManager.getConnectedUserList() });
   }
 }
