@@ -31,7 +31,7 @@ function ActiveCaseRepository() {
             timeStamp: new Date(Date.now()),
             personalData: user.description,
             heroNewMessages: 0,
-            neederNewMesages: 0,
+            neederNewMessages: 0,
             caseStatusChanged: false
           });
           return activeCase.save();

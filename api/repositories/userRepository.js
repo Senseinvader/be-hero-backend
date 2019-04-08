@@ -15,14 +15,14 @@ function UserRepository() {
           .exec()
     }
 
-    this.setUserLevel = (userId, newLevel) => {
+    this.incrementUserLevel = (userId) => {
         return User.findOneAndUpdate(
             {
                 $and: [
                     { _id: userId }
                 ]
             },
-            { level: newLevel }
+            {$inc: { level: 1 }}
         )
         .exec()
     }

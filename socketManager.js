@@ -115,24 +115,18 @@ const handleCaseTakenAction = (action, socket) => {
 
 const handleCaseCompletedAction = (action) => {
   const completedCase = action.message.completedCase;
-  userRepository.getUserById(completedCase.heroId)
+  userRepository.incrementUserLevel(completedCase.heroId)
   .then(result => {
-    let newLevel = Number(result[0].level)
-    newLevel++;
-    userRepository.setUserLevel(completedCase.heroId, newLevel)
-    .then(result => {
-      let recieverSocket = connectedUsersManager.getByUserId(completedCase.heroId).socketId;
-      io.to(recieverSocket).emit('action', {type: 'INCREMENT_HERO_LEVEL', newLevel: newLevel});
-    })
-    ActiveCase.deleteOne({ _id: completedCase._id })
-    .exec()
-    .then(result => {
-      let recieverSocket = connectedUsersManager.getByUserId(completedCase.neederId).socketId;
-      emitUserCases(recieverSocket, { id: completedCase.neederId, role: 'needer' });
-      let recieverSocketHero = connectedUsersManager.getByUserId(completedCase.heroId).socketId;
-      emitUserCases(recieverSocketHero, { id: completedCase.heroId, role: 'hero' });
-    })
-    .catch(err => console.log(err));
+    let recieverSocket = connectedUsersManager.getByUserId(completedCase.heroId).socketId;
+    io.to(recieverSocket).emit('action', {type: 'INCREMENT_HERO_LEVEL', newLevel: ++result.level});
+  })
+  ActiveCase.deleteOne({ _id: completedCase._id })
+  .exec()
+  .then(result => {
+    let recieverSocket = connectedUsersManager.getByUserId(completedCase.neederId).socketId;
+    emitUserCases(recieverSocket, { id: completedCase.neederId, role: 'needer' });
+    let recieverSocketHero = connectedUsersManager.getByUserId(completedCase.heroId).socketId;
+    emitUserCases(recieverSocketHero, { id: completedCase.heroId, role: 'hero' });
   })
   .catch(err => console.log(err));
 }
