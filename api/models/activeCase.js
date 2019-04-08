@@ -21,7 +21,8 @@ const activeCaseSchema = mongoose.Schema({
     timeStamp: Date,
     personalData: String,
     // If case status changed notify user about it
-    newMessages: Number,
+    heroNewMessages: Number,
+    neederNewMesages: Number,
     caseStatusChanged: Boolean
 });
 

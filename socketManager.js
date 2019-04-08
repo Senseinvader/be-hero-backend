@@ -32,6 +32,9 @@ module.exports = function(socket) {
       case 'server/user-is-typing':
         handleUserIsTyping(action);
         break;
+      case 'server/case-displayed':
+        handleCaseDisplayedAction(action);
+        break;
     }
   });
 
@@ -102,7 +105,6 @@ const handleCaseTakenAction = (action, socket) => {
     emitUserCases(socket.id, user);
     const neederSocketId = connectedUsersManager.getByUserId(neederId).socketId;
     emitUserCases(neederSocketId, { id: neederId, role: 'needer' });
-    // TODO notify about case taken
   })
   .catch(err => socket.emit('action', {
     type: 'DISPLAY_SNACKBAR_MESSAGE', 
@@ -167,7 +169,8 @@ const createCasesArray = (results) => {
         heroId: result.heroId,
         done: result.done,
         dialog: result.dialog,
-        timeStamp: result.timeStamp
+        timeStamp: result.timeStamp,
+        caseStatusChanged: result.caseStatusChanged
       }
     })
   return cases;
@@ -178,4 +181,9 @@ const handleUserDisconnectedAction = (socket) => {
     connectedUsersManager.removeByUserId(socket.user.id);
     io.emit('action', { type: 'USER_DISCONNECTED', users: connectedUsersManager.getConnectedUserList() });
   }
+}
+
+const handleCaseDisplayedAction = (action) => {
+  const caseId = action.message.caseId;
+  activeCaseRepository.markCaseDisplayed(caseId);
 }

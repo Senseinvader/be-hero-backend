@@ -29,7 +29,10 @@ function ActiveCaseRepository() {
             done: false,
             dialog: [],
             timeStamp: new Date(Date.now()),
-            personalData: user.description
+            personalData: user.description,
+            heroNewMessages: 0,
+            neederNewMesages: 0,
+            caseStatusChanged: false
           });
           return activeCase.save();
     }
@@ -41,8 +44,21 @@ function ActiveCaseRepository() {
                     {_id: caseId}, {done: false}, { heroId: null }
                 ]
             },
-            {heroId: heroId},
-            {new: true}
+            {heroId: heroId, caseStatusChanged: true},
+            // {new: true},
+            {caseStatusChanged: true}
+        )
+        .exec();
+    }
+
+    this.markCaseDisplayed = (caseId) => {
+        return ActiveCase.findOneAndUpdate(
+            {
+                $and: [
+                    {_id: caseId}
+                ]
+            },
+            {caseStatusChanged: false}
         )
         .exec()
     }
