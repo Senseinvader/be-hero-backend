@@ -35,6 +35,9 @@ module.exports = function(socket) {
       case 'server/case-displayed':
         handleCaseDisplayedAction(action);
         break;
+      case 'server/case-dialog-read':
+        handleCaseDialogRead(action);
+        break;
     }
   });
 
@@ -60,12 +63,16 @@ const handleUserConnectedAction = (action, socket) => {
 const handleMessageSentAction = (action, socket) => {
   let message = action.message;
   message.timeStamp = new Date(Date.now());
+  const reciever = connectedUsersManager.getByUserId(message.reciever);
   if(connectedUsersManager.getByUserId(message.reciever)) {
-    let recieverSocket = connectedUsersManager.getByUserId(message.reciever).socketId;
-    io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message});
+    let recieverSocket = reciever.socketId;
+    io.to(recieverSocket).emit('action', {type: 'MESSAGE_RECIEVED', message: message, role: reciever.role});
   }
   if (!connectedUsersManager.getByUserId(message.reciever)) {
     console.log('Reciever is offline, message was added to DB');
+  } else {
+    activeCaseRepository.incrementActiveCaseCountMessage(message.caseId, reciever.role)
+    .catch(err => console.log(err));
   }
   activeCaseRepository.addMessage(message)
     .catch(err => socket.emit('action', {
@@ -164,6 +171,9 @@ const createCasesArray = (results) => {
         done: result.done,
         dialog: result.dialog,
         timeStamp: result.timeStamp,
+        caseStatusChanged: result.caseStatusChanged,
+        heroNewMessages: result.heroNewMessages,
+        neederNewMessages: result.neederNewMessages,
         caseStatusChanged: result.caseStatusChanged
       }
     })
@@ -171,8 +181,9 @@ const createCasesArray = (results) => {
 }
 
 const handleUserDisconnectedAction = (socket) => {
-  if(socket.user) {
-    connectedUsersManager.removeByUserId(socket.user.id);
+  console.log('socket user: ', socket.id)
+  if(socket.id) {
+    connectedUsersManager.removeBySocketId(socket.id);
     io.emit('action', { type: 'USER_DISCONNECTED', users: connectedUsersManager.getConnectedUserList() });
   }
 }
@@ -180,4 +191,8 @@ const handleUserDisconnectedAction = (socket) => {
 const handleCaseDisplayedAction = (action) => {
   const caseId = action.message.caseId;
   activeCaseRepository.markCaseDisplayed(caseId);
+}
+
+const handleCaseDialogRead = (action) => {
+  activeCaseRepository.resetActiveCaseCountMessage(action.message.caseId, action.message.role);
 }

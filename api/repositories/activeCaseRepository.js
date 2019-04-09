@@ -55,13 +55,37 @@ function ActiveCaseRepository() {
         return ActiveCase.findOneAndUpdate(
             {
                 $and: [
-                    {_id: caseId}
+                    { _id: caseId }
                 ]
             },
             {caseStatusChanged: false}
         )
         .exec()
     }
+
+    this.incrementActiveCaseCountMessage = (caseId, role) => {
+        return ActiveCase.findOneAndUpdate(
+            {
+                $and: [
+                    { _id: caseId }
+                ]
+            },
+            role === 'hero' ? {$inc: { heroNewMessages: 1 }} : {$inc: { neederNewMessages: 1 }}
+        )
+        .exec()
+    }
+
+    this.resetActiveCaseCountMessage = (caseId, role) => {
+        return ActiveCase.findOneAndUpdate(
+            {
+                $and: [
+                    { _id: caseId }
+                ]
+            },
+            role === 'hero' ? {heroNewMessages: 0 } : {neederNewMessages: 0 }
+        )
+        .exec()
+        }
 }
 
 module.exports = ActiveCaseRepository;

@@ -4,6 +4,7 @@ function ConnectedUsers() {
     this.addUser = function(user, socketId) {
         user.socketId = socketId;
         this.connectedUsersList.push(user);
+        console.log(this.connectedUsersList)
     }
 
     this.getByUserId = function(userId) {
@@ -15,7 +16,11 @@ function ConnectedUsers() {
     }
 
     this.removeByUserId = function(userId) {
-        this.connectedUsersList = connectedUsersList.filter(user => user.id !== userId);
+        this.connectedUsersList = this.connectedUsersList.filter(user => user.id !== userId);
+    }
+
+    this.removeBySocketId = function(socketId) {
+        this.connectedUsersList = this.connectedUsersList.filter(user => user.socketId !== socketId);
     }
 
     this.getConnectedUserList = function() {
