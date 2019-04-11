@@ -141,7 +141,7 @@ const handleCaseCompletedAction = (action) => {
 const handleUserIsTyping = (action) => {
   if(connectedUsersManager.getByUserId(action.messageReciever)) {
     let recieverSocket = connectedUsersManager.getByUserId(action.messageReciever).socketId;
-    io.to(recieverSocket).emit('action', {type: 'IS_TYPING', isTyping: action.isTyping, sender: action.messageSender});
+    io.to(recieverSocket).emit('action', {type: 'IS_TYPING', isTyping: action.isTyping, sender: action.messageSender, caseId: action.caseId});
   }
 }
 
